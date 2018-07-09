@@ -202,20 +202,20 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
       image: pam79/docker-gen
       container_name: proxy-gen
       volumes_from:
-        - proxy-main
+        - proxy
       volumes:
         - /var/run/docker.sock:/tmp/docker.sock:ro
         - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
-      command: -watch -notify-sighup=proxy-main -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+      command: -watch -notify-sighup=proxy -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
       tty: true
       stdin_open: true
       depends_on:
-        - proxy-main
+        - proxy
       restart: always
 
-    proxy-main:
+    proxy:
       image: pam79/nginx
-      container_name: proxy-main
+      container_name: proxy
       volumes:
         - /etc/nginx/conf.d
         - /etc/nginx/vhost.d
@@ -237,8 +237,22 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
   ```
 
   &nbsp;
-  > For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, try this script: **https://github.com/pam79/ssl-gen**
+  For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, lets download and use the following script: https://github.com/pam79/ssl-gen.sh
+  ```shell
+  $ wget -o ssl-gen https://raw.githubusercontent.com/pam79/ssl-gen/master/ssl-gen.sh
+  $ chmod +x ssl-gen
+  $ bash ssl-gen *-dev.*
+  ```
 
+  > The generated certs will be placed in the **certs** directory by default.
+
+  &nbsp;
+  Finally, start the reverse-proxy
+  ```shell
+  $ docker-compose up -d
+  ```
+
+  &nbsp;
   Also, if you plan to use this setup in production, don't forget to add the following service to it to help obtain SSL/TLS certificate automatically from letsencrypt:
 
   ```shell
