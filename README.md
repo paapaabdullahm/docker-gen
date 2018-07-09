@@ -101,9 +101,9 @@ Environment Variables:
 &nbsp;
 ## Configuration file
 
-Using the -config flag from above you can tell docker-gen to use the specified config file instead of command-line options. Multiple templates can be defined and they will be executed in the order that they appear in the config file.
+Using the `-config` flag from above you can tell docker-gen to use the specified config file instead of command-line options. Multiple templates can be defined and they will be executed in the order that they appear in the config file.
 
-An example configuration file, **docker-gen.cfg** can be found in the examples folder.
+An example configuration file, **docker-gen.cfg** can be found in the [**examples**](https://github.com/jwilder/docker-gen/tree/master/examples) folder.
 
 &nbsp;
 ## Configuration File Syntax
@@ -168,7 +168,7 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
 
 * #### Reverse Proxy via Docker Compose (recommended)
 
-  Create an external network for the reverse proxy
+  Create external network for the reverse proxy
   ```shell
   $ docker network create -d bridge proxy-tier
   ```
@@ -230,17 +230,6 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
         - default
       restart: always
 
-    proxy-default:
-      container_name: proxy-default
-      build:
-        context: ./
-      working_dir: /usr/share/nginx/html
-      environment:
-        - VIRTUAL_HOST=default
-      networks:
-        - default
-      restart: always
-
   networks:
     default:
       external:
@@ -248,9 +237,9 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
   ```
 
   &nbsp;
-  > For SSL to work for this setup in development you should create a self-signed certificate and locally trust it. To help you speed up this process, use this tool: **https://github.com/pam79/ssl-gen**
+  > For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, try this script: **https://github.com/pam79/ssl-gen**
 
-  Also, if you are planning to use this setup in production, don't forget to add the following to the compose file above to obtain SSL/TLS certificate automatically from letsencrypt:
+  Also, if you plan to use this setup in production, don't forget to add the following service to it to help obtain SSL/TLS certificate automatically from letsencrypt:
 
   ```shell
   letsencrypt:
