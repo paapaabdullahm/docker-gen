@@ -239,8 +239,7 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
   &nbsp;
   For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, lets download and use the following script: https://github.com/pam79/ssl-gen.sh
   ```shell
-  $ wget -o ssl-gen https://raw.githubusercontent.com/pam79/ssl-gen/master/ssl-gen.sh
-  $ chmod +x ssl-gen
+  $ wget https://raw.githubusercontent.com/pam79/ssl-gen/master/ssl-gen.sh && mv ssl-gen.sh ssl-gen && chmod +x ssl-gen
   $ bash ssl-gen *-dev.*
   ```
 
