@@ -80,7 +80,7 @@ Options:
   -tlskey string
       path to TLS client key file (default "/Users/jason/.docker/machine/machines/default/key.pem")
   -tlsverify
-      verify docker daemon's TLS certicate (default true)
+      verify docker daemon's TLS certificate (default true)
   -version
       show version
   -watch
@@ -90,7 +90,7 @@ Options:
 
 Arguments:
   template - path to a template to generate
-  dest - path to a write the template. If not specfied, STDOUT is used
+  dest - path to a write the template. If not specified, STDOUT is used
 
 Environment Variables:
   DOCKER_HOST - default value for -endpoint
@@ -103,7 +103,7 @@ Environment Variables:
 
 Using the `-config` flag from above you can tell docker-gen to use the specified config file instead of command-line options. Multiple templates can be defined and they will be executed in the order that they appear in the config file.
 
-An example configuration file, **docker-gen.cfg** can be found in the [**examples**](https://github.com/jwilder/docker-gen/tree/master/examples) folder.
+An example configuration file, **docker-gen.cfg** can be found in the [examples](https://github.com/jwilder/docker-gen/tree/master/examples) folder.
 
 &nbsp;
 ## Configuration File Syntax
@@ -113,7 +113,7 @@ An example configuration file, **docker-gen.cfg** can be found in the [**example
 Starts a configuration section
 
 dest = "path/to/a/file"
-path to a write the template. If not specfied, STDOUT is used
+path to a write the template. If not specified, STDOUT is used
 
 notifycmd = "/etc/init.d/foo reload"
 run command after template is regenerated (e.g restart xyz)
