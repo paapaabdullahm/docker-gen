@@ -255,7 +255,7 @@ e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
     environment:
       - NGINX_DOCKER_GEN_CONTAINER=proxy-gen
     volumes_from:
-      - proxy-main
+      - proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./certs:/etc/nginx/certs:rw
