@@ -7,6 +7,126 @@ Template generation via docker container metadata. It can be used to generate va
 * **Service Discovery** - Scripts (python, bash, etc..) to register containers within [etcd](https://github.com/jwilder/docker-register), hipache, etc..
 
 &nbsp;
+## Example Usage
+
+* #### Reverse Proxy via Docker Compose
+
+  Create external network for the reverse proxy
+  ```shell
+  $ docker network create -d bridge proxy-tier
+  ```
+
+  &nbsp;
+  Create a directory for the proxy resource and change to it
+  ```shell
+  $ mkdir -p Projects/reverse-proxy && cd Projects/reverse-proxy
+  ```
+
+  &nbsp;
+  Download the latest `nginx.tmpl` template file
+  ```shell
+  $ curl https://raw.githubusercontent.com/jwilder/nginx-proxy/master/nginx.tmpl > ./nginx.tmpl
+  ```
+
+  &nbsp;
+  Create the reverse-proxy docker-compose file
+  ```shell
+  $ vim docker-compose.yml
+  ```
+
+  &nbsp;
+  Add the following contents to it
+  ```shell
+  version: '2.4'
+  
+  networks:
+    default:
+      external:
+        name: proxy-tier
+  
+  services:
+  
+    proxy:
+      image: pam79/nginx
+      container_name: proxy
+      volumes:
+        - /etc/nginx/conf.d
+        - /etc/nginx/vhost.d
+        - /usr/share/nginx/html
+        - /etc/nginx/certs
+        - ./certs:/etc/nginx/certs:ro
+      ports:
+        - "80:80"
+        - "443:443"
+      tty: true
+      stdin_open: true
+      networks:
+        - default
+      restart: always
+  
+    proxy-gen:
+      image: pam79/docker-gen
+      container_name: proxy-gen
+      volumes_from:
+        - proxy
+      volumes:
+        - /var/run/docker.sock:/tmp/docker.sock:ro
+        - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
+      command: -watch -notify-sighup=proxy -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+      tty: true
+      stdin_open: true
+      depends_on:
+        - proxy
+      restart: always
+  ```
+
+  &nbsp;
+  For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, consider using the following script: https://github.com/pam79/ssl-gen
+
+  &nbsp;
+  Finally, start the reverse-proxy
+  ```shell
+  $ docker-compose up -d
+  ```
+
+  &nbsp;
+  Also, if you plan to use this setup in production, don't forget to add the following service to it to help obtain SSL/TLS certificate automatically from letsencrypt:
+
+  ```shell
+  letsencrypt:
+    image: pam79/letsencrypt
+    container_name: letsencrypt
+    environment:
+      - NGINX_DOCKER_GEN_CONTAINER=proxy-gen
+    volumes_from:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs:rw
+    depends_on:
+      - proxy-gen
+    restart: always
+  ```
+
+&nbsp;
+* #### Fluentd Log Management
+
+  This template generate a fluentd.conf file used by fluentd. It would then ship log files off the host.
+
+  ```shell
+  $ docker-gen -watch -notify "restart fluentd" templates/fluentd.tmpl /etc/fluent/fluent.conf
+  ```
+
+&nbsp;
+* #### Service Discovery in Etcd
+
+  This template is an example of generating a script that is then executed. This template generates a python script that is then executed which register containers in Etcd using its HTTP API.
+
+  ```shell
+  $ docker-gen -notify "/bin/bash /tmp/etcd.sh" -interval 10 templates/etcd.tmpl /tmp/etcd.sh
+  ```
+
+&nbsp;
 ## Separate Container Install
 
 * #### Start nginx with a shared volume:
@@ -162,122 +282,3 @@ wait = "500ms:2s"
 nginx = 1  # 1 is a signal number to be sent; here SIGHUP
 e75a60548dc9 = 1  # a key can be either container name (nginx) or ID
 ```
-
-&nbsp;
-## Example Usage
-
-* #### Reverse Proxy via Docker Compose (recommended)
-
-  Create external network for the reverse proxy
-  ```shell
-  $ docker network create -d bridge proxy-tier
-  ```
-
-  &nbsp;
-  Create a directory for the proxy resource and change to it
-  ```shell
-  $ mkdir -p Projects/reverse-proxy && cd Projects/reverse-proxy
-  ```
-
-  &nbsp;
-  Download the latest `nginx.tmpl` template file
-  ```shell
-  $ curl https://raw.githubusercontent.com/jwilder/nginx-proxy/master/nginx.tmpl > ./nginx.tmpl
-  ```
-
-  &nbsp;
-  Create the reverse-proxy docker-compose file
-  ```shell
-  $ vim docker-compose.yml
-  ```
-
-  &nbsp;
-  Add the following contents to it
-  ```shell
-  version: '2.1'
-
-  services:
-
-    proxy-gen:
-      image: pam79/docker-gen
-      container_name: proxy-gen
-      volumes_from:
-        - proxy
-      volumes:
-        - /var/run/docker.sock:/tmp/docker.sock:ro
-        - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
-      command: -watch -notify-sighup=proxy -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
-      tty: true
-      stdin_open: true
-      depends_on:
-        - proxy
-      restart: always
-
-    proxy:
-      image: pam79/nginx
-      container_name: proxy
-      volumes:
-        - /etc/nginx/conf.d
-        - /etc/nginx/vhost.d
-        - /usr/share/nginx/html
-        - ./certs:/etc/nginx/certs:ro
-      ports:
-        - "80:80"
-        - "443:443"
-      tty: true
-      stdin_open: true
-      networks:
-        - default
-      restart: always
-
-  networks:
-    default:
-      external:
-        name: proxy-tier
-  ```
-
-  &nbsp;
-  For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, consider using the following script: https://github.com/pam79/ssl-gen
-
-  &nbsp;
-  Finally, start the reverse-proxy
-  ```shell
-  $ docker-compose up -d
-  ```
-
-  &nbsp;
-  Also, if you plan to use this setup in production, don't forget to add the following service to it to help obtain SSL/TLS certificate automatically from letsencrypt:
-
-  ```shell
-  letsencrypt:
-    image: pam79/letsencrypt
-    container_name: letsencrypt
-    environment:
-      - NGINX_DOCKER_GEN_CONTAINER=proxy-gen
-    volumes_from:
-      - proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs:rw
-    depends_on:
-      - proxy-gen
-    restart: always
-  ```
-
-&nbsp;
-* #### Fluentd Log Management
-
-  This template generate a fluentd.conf file used by fluentd. It would then ship log files off the host.
-
-  ```shell
-  $ docker-gen -watch -notify "restart fluentd" templates/fluentd.tmpl /etc/fluent/fluent.conf
-  ```
-
-&nbsp;
-* #### Service Discovery in Etcd
-
-  This template is an example of generating a script that is then executed. This template generates a python script that is then executed which register containers in Etcd using its HTTP API.
-
-  ```shell
-  $ docker-gen -notify "/bin/bash /tmp/etcd.sh" -interval 10 templates/etcd.tmpl /tmp/etcd.sh
-  ```
