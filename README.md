@@ -80,8 +80,7 @@ Template generation via docker container metadata. It can be used to generate va
       restart: always
   ```
 
-  &nbsp;
-  For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it. To help speed up this process, consider using the following script: https://github.com/pam79/ssl-gen
+  > For SSL to work for this setup in development, you should create a self-signed certificate, and locally trust it.
 
   &nbsp;
   Finally, start the reverse-proxy
@@ -89,8 +88,7 @@ Template generation via docker container metadata. It can be used to generate va
   $ docker-compose up -d
   ```
 
-  &nbsp;
-  Also, if you plan to use this setup in production, don't forget to add the following service to it to help obtain SSL/TLS certificate automatically from letsencrypt:
+  > Also, if you plan to use this setup in production, don't forget to add the following service to it to help obtain SSL/TLS certificate automatically from letsencrypt:
 
   ```shell
   letsencrypt:
